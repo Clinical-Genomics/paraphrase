@@ -1,6 +1,6 @@
 [project]
 name = "paraphrase"
-version = "0.2.0"
+version = "0.3.0.dev0"
 description = "Parse paraphase JSONs"
 authors = [{name="Felix Lenner", email="felix.lenner@scilifelab.se"}]
 license = {text = "MIT License"}
