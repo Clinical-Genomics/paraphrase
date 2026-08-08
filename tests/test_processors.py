@@ -1,5 +1,7 @@
 """Basic tests for paraphrase."""
 
+import pytest
+
 
 def test_process_paraphase_json():
     from paraphrase.processors import process_paraphase_json
@@ -46,6 +48,131 @@ def test_process_paraphase_json():
         },
     }
     assert process_paraphase_json(input_data, config) == expected_output
+
+
+def test_paraphase_v4_region_fields_match_v3_processing():
+    from paraphrase.config import ProcessingConfig
+    from paraphrase.processors import process_paraphase_json
+
+    fusion = {
+        "cfh_hap1": {
+            "type": "deletion",
+            "sequence": "121122",
+            "breakpoint": [[1, 2], [3, 4]],
+        }
+    }
+    v3 = {
+        "cfh": {"total_cn": 4, "fusions_called": fusion},
+        "ncf1": {"total_cn": 4, "gene_cn": 0, "gene_reads": 20},
+        "strc": {"total_cn": 4, "gene_cn": None},
+    }
+    v4 = {
+        "cfh": {
+            "total_cn": 4,
+            "region_specific_info": {"fusions_called": fusion},
+        },
+        "ncf1": {
+            "total_cn": 4,
+            "region_specific_info": {"gene_cn": 0, "gene_reads": 20},
+        },
+        "strc": {
+            "total_cn": 4,
+            "region_specific_info": {"gene_cn": None},
+        },
+    }
+    rules = {
+        "cfh": {
+            "rules": [
+                {
+                    "status": "intermediate",
+                    "when": {"fusions_called": {"not_empty": True}},
+                }
+            ]
+        },
+        "ncf1": {
+            "rules": [
+                {
+                    "status": "pathological",
+                    "when": {"gene_cn": 0},
+                }
+            ]
+        },
+    }
+    config = ProcessingConfig(skip_keys={"gene_reads"}, rules=rules)
+
+    v3_output = process_paraphase_json(v3, config)
+    v4_output = process_paraphase_json(v4, config)
+
+    assert v4_output == v3_output
+    assert "sequence" not in v4_output["cfh"]["fusions_called"]["cfh_hap1"]
+    assert v4_output["cfh"]["status"] == "intermediate"
+    assert v4_output["ncf1"]["status"] == "pathological"
+    assert "gene_reads" not in v4_output["ncf1"]
+    assert "gene_cn" not in v4_output["strc"]
+
+
+@pytest.mark.parametrize(
+    ("flat", "nested"),
+    [(2, 3), (1, True), ({"value": 1}, {"value": True}), ([1], [True])],
+)
+def test_process_paraphase_rejects_conflicting_flat_and_nested_values(flat, nested):
+    from paraphrase.config import ProcessingConfig
+    from paraphrase.processors import process_paraphase_json
+
+    input_data = {
+        "strc": {
+            "gene_cn": flat,
+            "region_specific_info": {"gene_cn": nested},
+        }
+    }
+
+    with pytest.raises(ValueError, match="Conflicting gene information.*gene_cn"):
+        process_paraphase_json(input_data, ProcessingConfig(skip_keys=set()))
+
+
+def test_process_paraphase_accepts_equal_duplicate_values():
+    from paraphrase.config import ProcessingConfig
+    from paraphrase.processors import process_paraphase_json
+
+    input_data = {
+        "strc": {
+            "gene_cn": 2,
+            "region_specific_info": {"gene_cn": 2},
+        }
+    }
+
+    assert process_paraphase_json(input_data, ProcessingConfig(skip_keys=set())) == {
+        "strc": {"gene_cn": 2}
+    }
+
+
+def test_process_paraphase_expands_region_fields_in_place():
+    from paraphrase.config import ProcessingConfig
+    from paraphrase.processors import process_paraphase_json
+
+    output = process_paraphase_json(
+        {
+            "strc": {
+                "before": 1,
+                "region_specific_info": {"gene_cn": 2},
+                "after": 3,
+            }
+        },
+        ProcessingConfig(skip_keys=set()),
+    )
+
+    assert list(output["strc"]) == ["before", "gene_cn", "after"]
+
+
+def test_process_paraphase_rejects_non_mapping_region_specific_info():
+    from paraphrase.config import ProcessingConfig
+    from paraphrase.processors import process_paraphase_json
+
+    with pytest.raises(ValueError, match="region_specific_info must be a mapping"):
+        process_paraphase_json(
+            {"strc": {"region_specific_info": []}},
+            ProcessingConfig(skip_keys=set()),
+        )
 
 
 def test_process_gene_info():

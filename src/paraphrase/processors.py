@@ -31,6 +31,7 @@ def process_paraphase_json(data: dict, config: ProcessingConfig) -> dict:
 
     out = {}
     for gene, info in data.items():
+        info = normalize_gene_info(info)
         processed = process_gene_info(info, handlers, skip_keys)
 
         # Optional, per-gene classification rules
@@ -53,6 +54,53 @@ def process_paraphase_json(data: dict, config: ProcessingConfig) -> dict:
         out[gene] = processed
 
     return out
+
+
+def normalize_gene_info(gene_info: dict) -> dict:
+    """Flatten Paraphase 4.x region fields into the 3.x-compatible shape."""
+    region_specific_info = gene_info.get("region_specific_info")
+    if region_specific_info is None:
+        return gene_info
+    if not isinstance(region_specific_info, dict):
+        raise ValueError("region_specific_info must be a mapping")
+
+    flat_info = {
+        key: value for key, value in gene_info.items() if key != "region_specific_info"
+    }
+    conflicting_keys = sorted(
+        key
+        for key in region_specific_info.keys() & flat_info.keys()
+        if not _json_values_equal(region_specific_info[key], flat_info[key])
+    )
+    if conflicting_keys:
+        raise ValueError(
+            "Conflicting gene information in top-level and region_specific_info: "
+            + ", ".join(conflicting_keys)
+        )
+
+    normalized = {}
+    for key, value in gene_info.items():
+        if key == "region_specific_info":
+            normalized.update(region_specific_info)
+        else:
+            normalized[key] = value
+    return normalized
+
+
+def _json_values_equal(left, right) -> bool:
+    """Compare JSON values without treating booleans as numbers."""
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(
+            _json_values_equal(left[key], right[key]) for key in left
+        )
+    if isinstance(left, list):
+        return len(left) == len(right) and all(
+            _json_values_equal(left_item, right_item)
+            for left_item, right_item in zip(left, right)
+        )
+    return left == right
 
 
 def process_gene_info(gene_info, handlers, skip_keys):
