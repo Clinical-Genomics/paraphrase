@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Paraphase 4.x `region_specific_info` fields now use the existing flat output
-  and rules contract
+- [#15](https://github.com/Clinical-Genomics/paraphrase/pull/15) - Paraphase 4.x
+  `region_specific_info` fields now use the existing flat output and rules
+  contract
 
 ### Updated
 
