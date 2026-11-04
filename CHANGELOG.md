@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v0.3.0dev0 [XXX-XX-XX]
 
+### Added
+
+- [#19](https://github.com/Clinical-Genomics/paraphrase/pull/19) - Handling of empty dicts in `region_depth` in Paraphase 4.x.
+
 ### Updated
 
 - [#14](https://github.com/Clinical-Genomics/paraphrase/pull/14) - Updated testdata to paraphase 3.5.0
