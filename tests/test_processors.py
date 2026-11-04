@@ -84,6 +84,15 @@ def test_handle_region_depth():
     assert handle_region_depth(input_data) == expected_output
 
 
+def test_process_gene_info_drops_empty_region_depth():
+    """Paraphase 4.x reports region_depth as {} for some regions (e.g. CFHclust)."""
+    from paraphrase.processors import process_gene_info, handle_region_depth
+
+    handlers = {"region_depth": handle_region_depth}
+    gene_info = {"region_depth": {}, "total_cn": 3}
+    assert process_gene_info(gene_info, handlers, set()) == {"total_cn": 3}
+
+
 def test_handle_final_haplotypes():
     from paraphrase.processors import handle_final_haplotypes
 
