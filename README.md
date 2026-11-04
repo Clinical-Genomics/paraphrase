@@ -40,6 +40,12 @@ Rules are evaluated per gene. Conditions within a single `when` mapping are
 combined with logical AND (all must be true). If multiple rules match, you can
 provide a `status_order` to pick the most severe (last wins by order).
 
+Paraphrase accepts both the flat region-specific fields emitted by Paraphase
+3.x and the `region_specific_info` mapping emitted by Paraphase 4.x. The latter
+is flattened into the existing Paraphrase output shape before handlers,
+skip-key filtering, and rules are applied. Conflicting flat and nested values
+raise an error instead of silently selecting one.
+
 Example:
 
 ```yaml
