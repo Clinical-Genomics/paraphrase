@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Updated
 
 - [#14](https://github.com/Clinical-Genomics/paraphrase/pull/14) - Updated testdata to paraphase 3.5.0
+- [#18](https://github.com/Clinical-Genomics/paraphrase/pull/18) - Updated testdata to paraphase 4.1.0
 
 ## v0.2.0 [2026-02-25]
 
