@@ -114,6 +114,8 @@ def process_gene_info(gene_info, handlers, skip_keys):
 
         if gene_metric in handlers:
             gene_metric_value = handlers[gene_metric](gene_metric_value)
+            if gene_metric_value is None:
+                continue
 
         # TODO: Stringify values here instead, for both JSON and TSV output?
         processed[gene_metric] = gene_metric_value
@@ -124,8 +126,11 @@ def process_gene_info(gene_info, handlers, skip_keys):
 def handle_region_depth(value):
     """
     Replace dict, e.g. { "median": 38.0, "percentile80": 45.2 } with median value.
+
+    Paraphase 4.x may report an empty dict (e.g. for CFHclust); return None so
+    the metric is dropped.
     """
-    return value["median"]
+    return value.get("median")
 
 
 def handle_final_haplotypes(value):

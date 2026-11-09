@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v0.3.0dev0 [XXX-XX-XX]
 
-### Fixed
+### Added
 
 - [#16](https://github.com/Clinical-Genomics/paraphrase/pull/16) - Paraphase 4.x
   `region_specific_info` fields now use the existing flat output and rules
   contract
+- [#19](https://github.com/Clinical-Genomics/paraphrase/pull/19) - Handling of empty dicts in `region_depth` in Paraphase 4.1.
 
 ### Updated
 
